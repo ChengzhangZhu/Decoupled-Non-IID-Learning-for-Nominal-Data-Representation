@@ -16,10 +16,15 @@ parser.add_argument('--T', default='30', help='The trunked size for variational 
 parser.add_argument('--infer', default='vi', help='variational inference (vi) or Gibbs sampling (gbs)', dest='infer', type=str)
 args = parser.parse_args()
 
+if args.verbose == 'n' or args.verbose == 'N':
+    verbose = False
+else:
+    verbose = True
+
 data_package = pickle.load(open('./Data/'+args.data_set+'.pkl', 'rb'))  # load data and label
 data = data_package['data']
 label = data_package['label']
-model = nonBEND(prt = args.verbose, name = args.data_set, maxEpoch = args.epochs, burnin = args.burnin)  # model initialization
+model = nonBEND(prt = verbose, name = args.data_set, maxEpoch = args.epochs, burnin = args.burnin)  # model initialization
 if args.infer == 'vi':
     model.fit_vi(data, T=args.T, n_iter=args.epochs)
 else:
