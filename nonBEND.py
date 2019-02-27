@@ -90,8 +90,8 @@ class nonBEND(object):
     def fit_vi(self, data, T=50, n_iter=50):
         # Variational inference
         self.data = data
-        for i in range(1): #data.shape[1]):
-            self.alpha0[i] = self.alpha0value * np.ones(len(np.unique(data)))
+        for i in range(data.shape[1]):
+            self.alpha0[i] = self.alpha0value * np.ones(len(np.unique(data[:, i])))
         self.VI(T=T, n_iter=n_iter)
         self.characterEstimate()
         self.embed()
