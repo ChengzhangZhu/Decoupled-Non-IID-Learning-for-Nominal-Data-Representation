@@ -100,6 +100,8 @@ class nonBEND(object):
         data = vi.transform_data(self.data)
         g1, g2, tau, phi, ll, held_out = vi.var_dpmm_multinomial(data, self.alpha0value, T, n_iter=n_iter, Xtest=None)
         self.z = vi.get_cat(phi)
+        self.ll = ll
+
 
     def GibbsSampling(self):
         numOfData = len(self.data)
