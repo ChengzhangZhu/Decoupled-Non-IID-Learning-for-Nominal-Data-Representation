@@ -91,7 +91,7 @@ class nonBEND(object):
         # Variational inference
         self.data = data
         for i in range(1): #data.shape[1]):
-            self.alpha0[i] = self.alpha0value * np.ones(len(np.unique(data[:, i])))
+            self.alpha0[i] = self.alpha0value * np.ones(len(np.unique(data)))
         self.VI(T=T, n_iter=n_iter)
         self.characterEstimate()
         self.embed()
