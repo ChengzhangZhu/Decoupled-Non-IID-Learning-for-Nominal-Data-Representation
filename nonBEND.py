@@ -13,17 +13,29 @@ Two fitting methods are provides:
 """
 
 import numpy as np
+import pickle
 #from scipy.special import gamma
 from scipy.stats import mode
 import var_dpmm as vi
+import time
+from tqdm import tqdm
+
+log_gamma_dict = None
 
 def logsum(x):
-    y = 0
-    if x > 0:
-        y = np.sum(np.log(np.r_[1:x+1]))
-    else:
+    global log_gamma_dict
+    if log_gamma_dict is None:
+        log_gamma_dict = dict()
+        for i in range(5000):
+            log_gamma_dict[i+1] = np.sum(np.log(np.r_[1:i+2]))
+    if x > 0 and x <= 5000:
+        y = log_gamma_dict[x]
+    elif x <= 0:
         y = 0
+    else:
+        y = (x+0.5)*np.log(x+1) + 0.5*np.log(2*np.pi) + 1/(12*(x+1))
     return y
+
 
 def logGammaC(beta):
     prop = 0
@@ -32,12 +44,12 @@ def logGammaC(beta):
     c = prop - logsum(np.sum(beta)-1)
     return c
 
-def calcProb(data, kappa, zOthers, obj, otherData, z, alpha, alpha0):
+def calcProb(data, kappa, zOthers, obj, otherData, z, alpha, alpha0, uniValue_list):
     prob = len(np.where(zOthers == kappa)[0])/(len(data) - 1 + alpha) #CRP
     gammaLog = 0
     kappaData = otherData[np.where(zOthers == kappa)]
     for i in range(data.shape[1]):
-        uniValue = np.unique(data[:,i])
+        uniValue = uniValue_list[i]
         ti = np.zeros(len(uniValue))
         tni = np.zeros(len(uniValue))
         ti[np.where(uniValue == obj[i])] = 1
@@ -54,7 +66,7 @@ def calcProbNew(data, obj, alpha, alpha0):
         uniValue = np.unique(data[:,i])
         ti = np.zeros(len(uniValue))
         ti[np.where(uniValue == obj[i])] = 1
-        gammaLog += logGammaC(ti+alpha0[i])- logGammaC(alpha0[i])
+        gammaLog += logGammaC(ti+alpha0[i]) - logGammaC(alpha0[i])
     prob = prob * np.exp(gammaLog)
     return prob
 
@@ -105,6 +117,9 @@ class nonBEND(object):
 
     def GibbsSampling(self):
         numOfData = len(self.data)
+        uni_value_list = list()
+        for i in range(self.data.shape[1]):
+            uni_value_list.append(np.unique(data[:, i]))
         #step 1, initial subspace with random assignment
         zList = np.arange(1,self.numOfZ + 1) #the subspace list
         zProb = np.ones([self.numOfZ])/self.numOfZ
@@ -112,10 +127,10 @@ class nonBEND(object):
         #step 2, sampling
         self.zHistory = list()
         for epoch in range(self.maxEpoch):
-            for i in range(numOfData):
+            for i in tqdm(range(numOfData)):
                 zProb = np.zeros(len(zList)+1)
                 for j in range(len(zList)):
-                    zProb[j] = calcProb(self.data, zList[j], np.concatenate((z[:i],z[i+1:])), self.data[i,:], np.concatenate((self.data[:i,:],self.data[i+1:,:])), z, self.alpha, self.alpha0)
+                    zProb[j] = calcProb(self.data, zList[j], np.concatenate((z[:i],z[i+1:])), self.data[i,:], np.concatenate((self.data[:i,:],self.data[i+1:,:])), z, self.alpha, self.alpha0, uni_value_list)
                 zProb[len(zList)] = calcProbNew(self.data, self.data[i,:], self.alpha, self.alpha0)
                 zProb = zProb/np.sum(zProb)
                 z[i] = np.random.choice(np.concatenate((zList,np.array([np.max(zList)+1]))), 1, p = zProb)
@@ -148,3 +163,12 @@ class nonBEND(object):
                 uniqueValue = np.unique(self.data[np.where(self.z == c),j])
                 for loc, value in enumerate(range(len(uniqueValue))):
                     self.embedding[np.where(self.data[:,j] == value), self.numOfClass*j + i] = self.pi[i]*self.theta[(i,j)][loc]
+
+data_set = 'mushroom'
+epochs = 30
+burnin = 5
+data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
+data = data_package['data']
+label = data_package['label']
+model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
+model.fit_gbs(data)
