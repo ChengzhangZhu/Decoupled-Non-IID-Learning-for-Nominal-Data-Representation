@@ -30,4 +30,4 @@ if args.infer == 'vi':
 else:
     model.fit_gbs(data)
 pickle.dump(model, open('./Model/'+args.data_set+'.model', 'wb'))
-pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'.embedding', 'wb'))
+pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'_{}.embedding'.format(args.infer), 'wb'))
