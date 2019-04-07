@@ -200,7 +200,7 @@ class nonBEND(object):
                         one_zero_dict[i][value] = self.pi[i] * one_zero_dict[i][value] * np.exp(-self.theta[(i, j)][value])
                 embedding_dict[j] = one_zero_dict
             data_embedding_list = []
-            for obj in data:
+            for obj in self.data:
                 data_embedding = []
                 for j, value in enumerate(obj):
                     feature_embedding = []
