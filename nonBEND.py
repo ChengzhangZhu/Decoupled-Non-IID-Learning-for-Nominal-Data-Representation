@@ -169,7 +169,7 @@ class nonBEND(object):
         # estimate attribute weight
         for j in range(self.data.shape[1]):
             freq_dict = dict()
-            for value in np.unique(data[:, j]):
+            for value in np.unique(self.data[:, j]):
                 freq_dict[value] = list()
                 for i, c in enumerate(np.unique(self.z)):
                     freq_dict[value].append(self.theta[(i, j)][value])
