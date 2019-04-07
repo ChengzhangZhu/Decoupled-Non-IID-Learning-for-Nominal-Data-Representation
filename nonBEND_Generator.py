@@ -14,6 +14,7 @@ parser.add_argument('--burnin', default=10000, help='The burn in steps for Gibbs
 parser.add_argument('--verbose', default='n', help='Print detail information during sampling', dest='verbose', type=str)
 parser.add_argument('--T', default='30', help='The trunked size for variational inference', dest='T', type=int)
 parser.add_argument('--infer', default='vi', help='variational inference (vi) or Gibbs sampling (gbs)', dest='infer', type=str)
+parser.add_argument('--method', default='naive', help='the embedding method', type=str)
 args = parser.parse_args()
 
 if args.verbose == 'n' or args.verbose == 'N':
@@ -26,8 +27,11 @@ data = data_package['data']
 label = data_package['label']
 model = nonBEND(prt = verbose, name = args.data_set, maxEpoch = args.epochs, burnin = args.burnin)  # model initialization
 if args.infer == 'vi':
-    model.fit_vi(data, T=args.T, n_iter=args.epochs)
+    model.fit_vi(data, T=args.T, n_iter=args.epochs, embedding_method=args.method)
 else:
     model.fit_gbs(data)
 pickle.dump(model, open('./Model/'+args.data_set+'.model', 'wb'))
-pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'_{}.embedding'.format(args.infer), 'wb'))
+if args.infer == 'vi':
+    pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'_{}_{}.embedding'.format(args.infer, args.method), 'wb'))
+else:
+    pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'_{}.embedding'.format(args.infer), 'wb'))

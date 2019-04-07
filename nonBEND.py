@@ -106,14 +106,14 @@ class nonBEND(object):
         self.characterEstimate()
         self.embed()
 
-    def fit_vi(self, data, T=50, n_iter=50):
+    def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive'):
         # Variational inference
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:, i]))))
         self.VI(T=T, n_iter=n_iter)
         self.characterEstimate()
-        self.embed()
+        self.embed(embedding_method=embedding_method)
 
     def VI(self,T=50, n_iter=50):
         data = vi.transform_data(self.data)
@@ -152,23 +152,63 @@ class nonBEND(object):
         self.numOfClass = len(np.unique(self.z))
         self.pi = np.ones(self.numOfClass)
         self.theta = dict()
+        self.weight = list()
         for i,c in enumerate(np.unique(self.z)):
             self.pi[i] = len(np.where(self.z == c)[0])/len(self.z)
-        #estimate theta
+        # estimate theta
             for j in range(self.data.shape[1]):
-                uniqueValue = np.unique(self.data[np.where(self.z == c),j])
+                uniqueValue = np.unique(self.data[:,j])
                 updateLambda = np.ones(len(uniqueValue))
+                update_lambda = dict()
                 for loc, value in enumerate(uniqueValue):
                     updateLambda[loc] = self.alpha0value + len(np.where(self.data[np.where(self.z == c), j] == value)[0])
-                self.theta[(i,j)] = updateLambda/np.sum(updateLambda)
-    
-    def embed(self):
-        self.embedding = np.zeros([self.data.shape[0], self.numOfClass * self.data.shape[1]])
+                    update_lambda[value] = self.alpha0value + len(np.where(self.data[np.where(self.z == c), j] == value)[0])
+                for value in update_lambda:
+                    update_lambda[value] = update_lambda[value]/np.sum(updateLambda)
+                self.theta[(i, j)] = update_lambda
+        # estimate attribute weight
         for j in range(self.data.shape[1]):
-            for i,c in enumerate(np.unique(self.z)):
-                uniqueValue = np.unique(self.data[np.where(self.z == c),j])
-                for loc, value in enumerate(range(len(uniqueValue))):
-                    self.embedding[np.where(self.data[:,j] == value), self.numOfClass*j + i] = self.pi[i]*self.theta[(i,j)][loc]
+            freq_dict = dict()
+            for value in np.unique(data[:, j]):
+                freq_dict[value] = list()
+                for i, c in enumerate(np.unique(self.z)):
+                    freq_dict[value].append(self.theta[(i, j)][value])
+                freq_dict[value] = np.std(freq_dict[value])
+            self.weight.append(np.mean(list(freq_dict.values())))
+
+    def embed(self, embedding_method='naive'):
+        if embedding_method == 'naive':
+            self.embedding = np.zeros([self.data.shape[0], self.numOfClass * self.data.shape[1]])
+            for j in range(self.data.shape[1]):
+                for i,c in enumerate(np.unique(self.z)):
+                    uniqueValue = np.unique(self.data[np.where(self.z == c), j])
+                    for loc, value in enumerate(range(len(uniqueValue))):
+                        self.embedding[np.where(self.data[:,j] == value), self.numOfClass*j + i] = self.pi[i]*self.theta[(i,j)][value]
+        else:  # one-zero embedding multiplies the exp(-frequency) with the distribution std as weight
+            embedding_dict = dict()
+            for j in range(self.data.shape[1]):
+                one_zero_dict = dict()
+                for i, c in enumerate(np.unique(self.z)):
+                    unique_value = np.unique(self.data[np.where(self.z == c), j])
+                    # one zero embedding
+                    one_zero_dict[i] = dict()
+                    for value_index, value in enumerate(unique_value):
+                        one_zero_dict[i][value] = np.ones(len(unique_value))
+                        one_zero_dict[i][value][value_index] = 0
+                    # multiply exp(-frequency) and subspace probability
+                    for value in one_zero_dict:
+                        one_zero_dict[i][value] = self.pi[i] * one_zero_dict[value] * np.exp(-self.theta[(i, j)][value])
+                embedding_dict[j] = one_zero_dict
+            data_embedding_list = []
+            for obj in data:
+                data_embedding = []
+                for j, value in enumerate(obj):
+                    feature_embedding = []
+                    for z in embedding_dict[j]:
+                        feature_embedding.append(embedding_dict[j][z][value])
+                    data_embedding.append(self.weight[j] * np.concatenate(feature_embedding, axis=0))
+                data_embedding_list.append(np.concatenate(data_embedding, axis=0))
+            self.embedding = np.stack(data_embedding_list)
 
 # data_set = 'mushroom'
 # epochs = 30
