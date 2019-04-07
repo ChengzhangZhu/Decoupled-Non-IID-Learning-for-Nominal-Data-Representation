@@ -189,14 +189,14 @@ class nonBEND(object):
             for j in range(self.data.shape[1]):
                 one_zero_dict = dict()
                 for i, c in enumerate(np.unique(self.z)):
-                    unique_value = np.unique(self.data[np.where(self.z == c), j])
+                    unique_value = np.unique(self.data[:, j])
                     # one zero embedding
                     one_zero_dict[i] = dict()
                     for value_index, value in enumerate(unique_value):
                         one_zero_dict[i][value] = np.ones(len(unique_value))
                         one_zero_dict[i][value][value_index] = 0
                     # multiply exp(-frequency) and subspace probability
-                    for value in one_zero_dict:
+                    for value in one_zero_dict[i]:
                         one_zero_dict[i][value] = self.pi[i] * one_zero_dict[i][value] * np.exp(-self.theta[(i, j)][value])
                 embedding_dict[j] = one_zero_dict
             data_embedding_list = []
@@ -210,11 +210,11 @@ class nonBEND(object):
                 data_embedding_list.append(np.concatenate(data_embedding, axis=0))
             self.embedding = np.stack(data_embedding_list)
 
-# data_set = 'mushroom'
+# data_set = 'zoo'
 # epochs = 30
 # burnin = 5
 # data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
 # data = data_package['data']
 # label = data_package['label']
 # model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
-# model.fit_gbs(data)
+# model.fit_vi(data, embedding_method='one-zero')
