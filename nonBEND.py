@@ -197,7 +197,7 @@ class nonBEND(object):
                         one_zero_dict[i][value][value_index] = 0
                     # multiply exp(-frequency) and subspace probability
                     for value in one_zero_dict:
-                        one_zero_dict[i][value] = self.pi[i] * one_zero_dict[value] * np.exp(-self.theta[(i, j)][value])
+                        one_zero_dict[i][value] = self.pi[i] * one_zero_dict[i][value] * np.exp(-self.theta[(i, j)][value])
                 embedding_dict[j] = one_zero_dict
             data_embedding_list = []
             for obj in data:
