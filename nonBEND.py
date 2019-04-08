@@ -97,23 +97,23 @@ class nonBEND(object):
         self.prt = prt
         self.name = name
         
-    def fit_gbs(self, data, embedding_method='naive'):
+    def fit_gbs(self, data, embedding_method='naive', weighted=True):
         # Gibbs smapling
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:,i]))))
         self.GibbsSampling()
         self.characterEstimate()
-        self.embed(embedding_method=embedding_method)
+        self.embed(embedding_method=embedding_method, weighted=weighted)
 
-    def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive'):
+    def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive', weighted=True):
         # Variational inference
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:, i]))))
         self.VI(T=T, n_iter=n_iter)
         self.characterEstimate()
-        self.embed(embedding_method=embedding_method)
+        self.embed(embedding_method=embedding_method, weighted=weighted)
 
     def VI(self,T=50, n_iter=50):
         data = vi.transform_data(self.data)
@@ -176,7 +176,7 @@ class nonBEND(object):
                 freq_dict[value] = np.std(freq_dict[value])
             self.weight.append(np.exp(np.mean(list(freq_dict.values()))))
 
-    def embed(self, embedding_method='naive'):
+    def embed(self, embedding_method='naive', weighted=True):
         if embedding_method == 'naive':
             self.embedding = np.zeros([self.data.shape[0], self.numOfClass * self.data.shape[1]])
             for j in range(self.data.shape[1]):
@@ -206,7 +206,10 @@ class nonBEND(object):
                     feature_embedding = []
                     for z in embedding_dict[j]:
                         feature_embedding.append(embedding_dict[j][z][value])
-                    data_embedding.append(self.weight[j] * np.concatenate(feature_embedding, axis=0))
+                    if weighted:
+                        data_embedding.append(self.weight[j] * np.concatenate(feature_embedding, axis=0))
+                    else:
+                        data_embedding.append(np.concatenate(feature_embedding, axis=0))
                 data_embedding_list.append(np.concatenate(data_embedding, axis=0))
             self.embedding = np.stack(data_embedding_list)
 
