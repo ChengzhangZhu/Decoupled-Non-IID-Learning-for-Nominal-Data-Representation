@@ -174,7 +174,7 @@ class nonBEND(object):
                 for i, c in enumerate(np.unique(self.z)):
                     freq_dict[value].append(self.theta[(i, j)][value])
                 freq_dict[value] = np.std(freq_dict[value])
-            self.weight.append(np.mean(list(freq_dict.values())))
+            self.weight.append(np.exp(np.mean(list(freq_dict.values()))))
 
     def embed(self, embedding_method='naive'):
         if embedding_method == 'naive':
@@ -210,11 +210,13 @@ class nonBEND(object):
                 data_embedding_list.append(np.concatenate(data_embedding, axis=0))
             self.embedding = np.stack(data_embedding_list)
 
-# data_set = 'zoo'
-# epochs = 30
-# burnin = 5
-# data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
-# data = data_package['data']
-# label = data_package['label']
-# model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
-# model.fit_vi(data, embedding_method='one-zero')
+data_set = 'soybeansmall'
+epochs = 50
+burnin = 5
+data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
+data = data_package['data']
+label = data_package['label']
+model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
+model.fit_vi(data, embedding_method='one-zero')
+print(model.embedding)
+print(model.weight)

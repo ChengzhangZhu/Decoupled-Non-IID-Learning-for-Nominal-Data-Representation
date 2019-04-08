@@ -29,6 +29,6 @@ model = nonBEND(prt = verbose, name = args.data_set, maxEpoch = args.epochs, bur
 if args.infer == 'vi':
     model.fit_vi(data, T=args.T, n_iter=args.epochs, embedding_method=args.method)
 else:
-    model.fit_gbs(data)
+    model.fit_gbs(data, embedding_method=args.method)
 pickle.dump(model, open('./Model/'+args.data_set+'.model', 'wb'))
 pickle.dump((model.embedding, label), open('./Representation/'+args.data_set+'_{}_{}.embedding'.format(args.infer, args.method), 'wb'))
