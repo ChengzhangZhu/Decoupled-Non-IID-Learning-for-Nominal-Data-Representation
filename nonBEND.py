@@ -97,14 +97,14 @@ class nonBEND(object):
         self.prt = prt
         self.name = name
         
-    def fit_gbs(self, data):
+    def fit_gbs(self, data, embedding_method='naive'):
         # Gibbs smapling
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:,i]))))
         self.GibbsSampling()
         self.characterEstimate()
-        self.embed()
+        self.embed(embedding_method=embedding_method)
 
     def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive'):
         # Variational inference
