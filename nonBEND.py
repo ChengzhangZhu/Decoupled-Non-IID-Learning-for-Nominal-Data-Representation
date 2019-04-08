@@ -210,13 +210,13 @@ class nonBEND(object):
                 data_embedding_list.append(np.concatenate(data_embedding, axis=0))
             self.embedding = np.stack(data_embedding_list)
 
-data_set = 'soybeansmall'
-epochs = 50
-burnin = 5
-data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
-data = data_package['data']
-label = data_package['label']
-model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
-model.fit_vi(data, embedding_method='one-zero')
-print(model.embedding)
-print(model.weight)
+# data_set = 'soybeansmall'
+# epochs = 50
+# burnin = 5
+# data_package = pickle.load(open('./Data/'+data_set+'.pkl', 'rb'))  # load data and label
+# data = data_package['data']
+# label = data_package['label']
+# model = nonBEND(prt = True, name = data_set, maxEpoch = epochs, burnin = burnin)  # model initialization
+# model.fit_vi(data, embedding_method='one-zero')
+# print(model.embedding)
+# print(model.weight)
