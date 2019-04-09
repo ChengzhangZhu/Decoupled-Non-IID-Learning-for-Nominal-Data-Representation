@@ -98,7 +98,7 @@ class nonBEND(object):
         self.name = name
         
     def fit_gbs(self, data, embedding_method='naive', weighted=True):
-        # Gibbs smapling
+        # Gibbs sampling
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:,i]))))
