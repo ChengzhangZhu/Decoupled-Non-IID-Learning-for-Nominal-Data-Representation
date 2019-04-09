@@ -133,7 +133,7 @@ class nonBEND(object):
         #step 2, sampling
         self.zHistory = list()
         for epoch in range(self.maxEpoch):
-            for i in tqdm(range(numOfData)):
+            for i in range(numOfData):
                 zProb = np.zeros(len(zList)+1)
                 for j in range(len(zList)):
                     zProb[j] = calcProb(self.data, zList[j], np.concatenate((z[:i],z[i+1:])), self.data[i,:], np.concatenate((self.data[:i,:],self.data[i+1:,:])), z, self.alpha, self.alpha0, uni_value_list)
