@@ -70,7 +70,8 @@ def logsumexp(a, axis=None):
     except:
         return a_max + np.log(np.sum(np.exp(a - a_max[:,np.newaxis]), axis=axis))
 
-def var_dpmm_multinomial(X, alpha, T=50, n_iter=100, Xtest=None):
+
+def var_dpmm_multinomial(X, alpha, T=50, n_iter=100, Xtest=None, verbose=True):
     '''
     runs variational inference on a DP mixture model where each
     mixture component is a multinomial distribution.
@@ -107,7 +108,11 @@ def var_dpmm_multinomial(X, alpha, T=50, n_iter=100, Xtest=None):
 
     ll = []
     held_out = []
-    for it in tqdm(range(n_iter)):
+    if verbose is True:
+        bar = tqdm(range(n_iter))
+    else:
+        bar = range(n_iter)
+    for it in bar:
         # sys.stdout.write('.'); sys.stdout.flush()
         gamma1 = 1. + np.sum(phi[:T-1,:], axis=1)
         phi_cum = np.cumsum(phi[:0:-1,:], axis=0)[::-1,:]

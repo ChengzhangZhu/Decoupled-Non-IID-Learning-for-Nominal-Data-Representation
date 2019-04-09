@@ -97,31 +97,31 @@ class nonBEND(object):
         self.prt = prt
         self.name = name
         
-    def fit_gbs(self, data, embedding_method='naive', weighted=True):
+    def fit_gbs(self, data, embedding_method='naive', weighted=True, verbose=True):
         # Gibbs sampling
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:,i]))))
-        self.GibbsSampling()
+        self.GibbsSampling(verbose=verbose)
         self.characterEstimate()
         self.embed(embedding_method=embedding_method, weighted=weighted)
 
-    def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive', weighted=True):
+    def fit_vi(self, data, T=50, n_iter=50, embedding_method='naive', weighted=True, verbose=True):
         # Variational inference
         self.data = data
         for i in range(data.shape[1]):
             self.alpha0.append(self.alpha0value * np.ones(len(np.unique(data[:, i]))))
-        self.VI(T=T, n_iter=n_iter)
+        self.VI(T=T, n_iter=n_iter, verbose=verbose)
         self.characterEstimate()
         self.embed(embedding_method=embedding_method, weighted=weighted)
 
-    def VI(self,T=50, n_iter=50):
+    def VI(self,T=50, n_iter=50, verbose=True):
         data = vi.transform_data(self.data)
-        g1, g2, tau, phi, ll, held_out = vi.var_dpmm_multinomial(data, self.alpha0value, T, n_iter=n_iter, Xtest=None)
+        g1, g2, tau, phi, ll, held_out = vi.var_dpmm_multinomial(data, self.alpha0value, T, n_iter=n_iter, Xtest=None, verbose=verbose)
         self.z = vi.get_cat(phi)
         self.ll = ll
 
-    def GibbsSampling(self):
+    def GibbsSampling(self, verbose=True):
         numOfData = len(self.data)
         uni_value_list = list()
         for i in range(self.data.shape[1]):
@@ -133,7 +133,11 @@ class nonBEND(object):
         #step 2, sampling
         self.zHistory = list()
         for epoch in range(self.maxEpoch):
-            for i in range(numOfData):
+            if verbose is True:
+                bar = tqdm(range(numOfData))
+            else:
+                bar = range(numOfData)
+            for i in bar:
                 zProb = np.zeros(len(zList)+1)
                 for j in range(len(zList)):
                     zProb[j] = calcProb(self.data, zList[j], np.concatenate((z[:i],z[i+1:])), self.data[i,:], np.concatenate((self.data[:i,:],self.data[i+1:,:])), z, self.alpha, self.alpha0, uni_value_list)
